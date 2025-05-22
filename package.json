@@ -1,0 +1,23 @@
+{
+  "name": "taskforgebackend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imtiaz3699/taskforgebackend.git"
+  },
+  "author": "Imtiaz Ahmed",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/imtiaz3699/taskforgebackend/issues"
+  },
+  "homepage": "https://github.com/imtiaz3699/taskforgebackend#readme",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0"
+  }
+}
