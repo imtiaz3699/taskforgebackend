@@ -1,22 +1,17 @@
-const { MongoClient } = require('mongodb');
-async function listDatabases(client) {
-    try {
-        databasesList = await client.db().admin().listDatabases();
+const mongoose = require('mongoose');
 
-        console.log("Databases:");
-        databasesList.databases.forEach(db => console.log(` - ${db.name}`));
-    } catch (error) {
-        console.error('Error listing databases:', error);
-    }
-};
 async function connectDb() {
-    console.log("Connecting to MongoDB...",process.env.MONGO_URL);
+    console.log("Connecting to MongoDB with Mongoose...", process.env.MONGO_URL);
     try {
-        const client = new MongoClient(process.env.MONGO_URL);
-        await client.connect();
-        await listDatabases(client);
+        await mongoose.connect(process.env.MONGO_URL, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 10000, // Optional: connection timeout
+        });
+        console.log("✅ Mongoose connected to MongoDB");
     } catch (error) {
-        console.error('Error connecting to MongoDB:', error);
+        console.error(' Mongoose connection error:', error);
+        process.exit(1); // Optional: exit if DB connection fails
     }
 }
 
