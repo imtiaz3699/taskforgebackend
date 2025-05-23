@@ -4,6 +4,9 @@ const authMiddleware = require("../middleware/authmiddleware")
 const checkUser = require("../middleware/checkuser")
 const {register,login}  = require("../controller/user.controller")
 const {createTask, getTask} = require("../controller/task.controller")
+const {createTeam} = require("../controller/team.controller")
+
+// auth
 router.post("/auth/register",register)
 router.post("/auth/login",login)
 
@@ -13,6 +16,6 @@ router.get("/task/get-task",authMiddleware,getTask);
 
 
 // teams
-// router.post("/teams/create-teams",authMiddleware,createTask);
+router.post("/teams/create-teams",authMiddleware,checkUser,createTeam);
 
 module.exports = router;

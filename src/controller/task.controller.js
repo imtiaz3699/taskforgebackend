@@ -27,7 +27,7 @@ async function createTask(req, res) {
 }
 
 async function getTask(req, res) {
-    const {page, limit} = req.query
+    const { page, limit } = req.query
     try {
         const task = await Task.find().populate("created_by").populate("assigned_to").skip((page - 1) * limit).limit(limit);
         return res.status(200).json(task)
@@ -38,8 +38,7 @@ async function getTask(req, res) {
     }
 }
 
-async function assignTask(req,res) {
-          
+async function assignTask(req, res) {
 }
 
 module.exports = {
