@@ -5,7 +5,7 @@ function checkUser(req, res, next) {
             message: "Unauthorized"
         })
     }
-    
+    next();
 }
 
 module.exports = checkUser

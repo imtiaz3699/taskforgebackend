@@ -2,7 +2,7 @@ const User = require("../models/user.model")
 const jwt = require("jsonwebtoken");
 async function register(req, res) {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password,role } = req.body;
         if (!email) {
             return res.status(400).json({
                 message: "Email is required"
@@ -25,7 +25,9 @@ async function register(req, res) {
             password,
             role
         })
-        return res.status(201).json(user)
+        const userObj = user.toObject();
+        delete userObj.password
+        return res.status(201).json({user:userObj})
     } catch (e) {
         console.log(e)
         return res.status(500).json({
@@ -53,7 +55,7 @@ async function login(req, res) {
             return res.status(400).json({
                 message: "User not found"
             })
-        }
+        }       
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
             return res.status(400).json({
@@ -76,7 +78,21 @@ async function login(req, res) {
         })
     }
 }
+
+async function getUsers(req,res) {
+    try {
+        const users = await User.find();
+        return res.status(200).json(users)
+    }catch (e) {
+        console.log(e);
+        return res.status(500).json({
+            message: "Internal server error",
+            error: e.message
+        })
+    }
+}
 module.exports = {
     register,
-    login
+    login,
+    getUsers
 }
