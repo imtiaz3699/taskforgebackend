@@ -63,7 +63,7 @@ async function login(req, res) {
             })
         }
         const token = jwt.sign({ id: user._id, role: user.role, email: user.email, name: user.name }, process.env.JWT_SECRET, {
-            expiresIn: `7d`,
+            expiresIn: `90d`,
         });
         const userObj = user.toObject();
         delete userObj.password
@@ -80,9 +80,19 @@ async function login(req, res) {
 }
 
 async function getUsers(req,res) {
+    const {page = 1,limit = 10} = req.query;
     try {
-        const users = await User.find();
-        return res.status(200).json(users)
+        const users = await User.find().skip((page - 1) * limit).limit(limit);
+        const totalRecords = await User.countDocuments();
+        const data = {
+            totalRecords,
+            total:users?.length,
+            users,
+            page:Number(page),
+            limit:Number(limit),
+            totalPages:Math.ceil(totalRecords / limit)
+        }
+        return res.status(200).json(data)
     }catch (e) {
         console.log(e);
         return res.status(500).json({
