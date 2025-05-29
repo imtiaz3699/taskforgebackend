@@ -2,12 +2,16 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require("../middleware/authmiddleware")
 const checkUser = require("../middleware/checkuser")
-const {register,login, getUsers}  = require("../controller/user.controller")
+const {register,login, getUsers, getSingleUser, updateUser, deleteUser}  = require("../controller/user.controller")
 const {createTask, getTask,getSingleTask, updateTask, deleteTask} = require("../controller/task.controller")
-const {createTeam, getTeams} = require("../controller/team.controller")
+const {createTeam, getTeams, deleteTeams,getUsersTeams} = require("../controller/team.controller")
 
 // auth
 router.post("/auth/register",register)
+router.post("/auth/create-user",authMiddleware,checkUser,register)
+router.delete("/auth/delete-user/:id",authMiddleware,checkUser,deleteUser)
+router.post("/auth/update-user/:id",authMiddleware,checkUser,updateUser)
+router.get("/auth/get-single-user/:id",authMiddleware,checkUser,getSingleUser)
 router.post("/auth/login",login)
 router.get("/auth/get-users",getUsers)
 
@@ -21,6 +25,8 @@ router.delete("/task/delete-task/:id",authMiddleware,deleteTask);
 
 // teams
 router.post("/teams/create-teams",authMiddleware,checkUser,createTeam);
-router.post("/teams/get-teams",authMiddleware,getTeams);
+router.delete("/teams/delete-teams/:id",authMiddleware,checkUser,deleteTeams);
+router.get("/teams/get-teams",authMiddleware,getTeams);
+router.get("/teams/get-users/:id",authMiddleware,getUsersTeams);
 
 module.exports = router;

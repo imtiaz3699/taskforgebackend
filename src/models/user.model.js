@@ -15,6 +15,10 @@ const userSchema = new mongoose.Schema({
         required: true,
         select: false,
     },
+    created_by:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"User",
+    },
     role: {
         type: String,
         enum: ["admin", "member"],

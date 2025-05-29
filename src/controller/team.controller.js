@@ -1,4 +1,5 @@
 const Team = require("../models/team.model")
+const Users = require("../models/user.model")
 
 async function createTeam(req, res) {
     const { team_title, team_members, created_by, manager, team_lead } = req.body;
@@ -20,7 +21,6 @@ async function createTeam(req, res) {
             manager,
             team_lead
         })
-
         return res.status(201).json(team)
     } catch (e) {
         console.log(e);
@@ -41,8 +41,17 @@ async function getTeams(req, res) {
             .populate("team_lead")
             .skip((page - 1) * limit)
             .limit(limit);
-        
-        return res.status(200).json(teams);
+
+        const totalRecords = await Team.countDocuments();
+        const data = {
+            data:teams,
+            totalRecords:Number(totalRecords),
+            page:Number(page),
+            limit:Number(limit),
+            totalPages:Math.ceil(totalRecords / limit),
+            total:teams?.length,
+        }
+        return res.status(200).json(data);
     } catch (e) {
         console.log(e);
         return res.status(500).json({
@@ -50,7 +59,35 @@ async function getTeams(req, res) {
         })
     }
 }
+async function deleteTeams(req,res) {
+    console.log(req.params.id);
+    try {
+        const response = await Team.findByIdAndDelete(req.params.id);
+        if(!response) {
+            return res.status(400).json({message:"Teams does not exists."})
+        }
+        return res.status(200).json({
+            message:"Teams has been deleted."
+        })
+    }catch (e) {
+        console.log(e);
+        return res.status(500).json({message:"Internal server error."})
+    }
+}
+
+async function getUsersTeams (req,res) {
+    try {
+        const response = await Users.find({created_by:req.params.id});
+        console.log(response,req.params.id,'fadlfhaldkfdReqParamsId')
+        return res.status(200).json({users:response})
+    }catch (e) {    
+        console.log(e);
+        return res.status(500).json({message:"Internal server error."})
+    }
+}
 module.exports = {
     createTeam,
-    getTeams
+    getTeams,
+    deleteTeams,
+    getUsersTeams
 }
