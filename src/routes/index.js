@@ -13,7 +13,7 @@ router.delete("/auth/delete-user/:id",authMiddleware,checkUser,deleteUser)
 router.post("/auth/update-user/:id",authMiddleware,checkUser,updateUser)
 router.get("/auth/get-single-user/:id",authMiddleware,checkUser,getSingleUser)
 router.post("/auth/login",login)
-router.get("/auth/get-users",getUsers)
+router.get("/auth/get-users",authMiddleware,checkUser,getUsers)
 
 // task
 router.post("/task/create-task",authMiddleware,createTask);

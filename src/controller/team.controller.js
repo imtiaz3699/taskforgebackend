@@ -34,14 +34,13 @@ async function createTeam(req, res) {
 async function getTeams(req, res) {
     try {
         const { page, limit } = req.query;
-        const teams = await Team.find()
+        const teams = await Team.find({created_by:req.user.id})
             .populate("team_members")
             .populate("created_by")
             .populate("manager")
             .populate("team_lead")
             .skip((page - 1) * limit)
             .limit(limit);
-
         const totalRecords = await Team.countDocuments();
         const data = {
             data:teams,
@@ -60,7 +59,6 @@ async function getTeams(req, res) {
     }
 }
 async function deleteTeams(req,res) {
-    console.log(req.params.id);
     try {
         const response = await Team.findByIdAndDelete(req.params.id);
         if(!response) {
@@ -78,8 +76,7 @@ async function deleteTeams(req,res) {
 async function getUsersTeams (req,res) {
     try {
         const response = await Users.find({created_by:req.params.id});
-        console.log(response,req.params.id,'fadlfhaldkfdReqParamsId')
-        return res.status(200).json({users:response})
+        return res.status(200).json({data:response})
     }catch (e) {    
         console.log(e);
         return res.status(500).json({message:"Internal server error."})

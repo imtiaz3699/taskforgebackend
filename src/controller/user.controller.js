@@ -2,7 +2,7 @@ const User = require("../models/user.model");
 const jwt = require("jsonwebtoken");
 async function register(req, res) {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, created_by } = req.body;
     if (!email) {
       return res.status(400).json({
         message: "Email is required",
@@ -12,6 +12,9 @@ async function register(req, res) {
       return res.status(400).json({
         message: "Password is required",
       });
+    }
+    if (!created_by) {
+      return res.status(400).json({ message: "Created by Id is required." });
     }
     const userExists = await User.find({ email });
     if (userExists.length > 0) {
@@ -24,6 +27,7 @@ async function register(req, res) {
       email,
       password,
       role,
+      created_by,
     });
     const userObj = user.toObject();
     delete userObj.password;
@@ -39,7 +43,7 @@ async function register(req, res) {
 
 async function updateUser(req, res) {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, created_by } = req.body;
     const userId = req.params.id;
 
     if (!userId) {
@@ -60,6 +64,7 @@ async function updateUser(req, res) {
     if (email) user.email = email;
     if (password) user.password = password;
     if (role) user.role = role;
+    if (created_by) user.created_by = created_by;
 
     await user.save();
 
@@ -125,10 +130,10 @@ async function login(req, res) {
 async function getUsers(req, res) {
   const { page = 1, limit = 10 } = req.query;
   try {
-    const users = await User.find()
+    const users = await User.find({created_by:req.user.id})
       .skip((page - 1) * limit)
       .limit(limit);
-    const totalRecords = await User.countDocuments();
+    const totalRecords = await User.countDocuments({created_by:req.user.id});
     const data = {
       totalRecords,
       total: users?.length,
@@ -158,18 +163,20 @@ async function getSingleUser(req, res) {
   }
 }
 
-async function deleteUser (req,res)  {
-    try {
-        const response = await User.findByIdAndDelete(req.params.id);
-        if(!response) {
-            return res.status(400).json({
-                message:"User does not exists."
-            })
-        }
-        return res.status(200).json({message:"User has been deleted successfully."})
-    }catch (e) {
-        console.log(e);
+async function deleteUser(req, res) {
+  try {
+    const response = await User.findByIdAndDelete(req.params.id);
+    if (!response) {
+      return res.status(400).json({
+        message: "User does not exists.",
+      });
     }
+    return res
+      .status(200)
+      .json({ message: "User has been deleted successfully." });
+  } catch (e) {
+    console.log(e);
+  }
 }
 module.exports = {
   register,
@@ -177,5 +184,5 @@ module.exports = {
   getUsers,
   getSingleUser,
   updateUser,
-  deleteUser
+  deleteUser,
 };

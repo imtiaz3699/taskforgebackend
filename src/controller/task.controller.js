@@ -69,9 +69,10 @@ async function updateTask(req, res) {
 
 async function getTask(req, res) {
     const { page = 1, limit = 20 } = req.query;
+    console.log(req.user.id)
     try {
-        const response = await Task.find().populate("created_by").populate("assigned_to").skip((page - 1) * limit).limit(limit);
-        const totalRecords = await Task.countDocuments();
+        const response = await Task.find({created_by:req.user.id}).populate("created_by").populate("assigned_to").skip((page - 1) * limit).limit(limit);
+        const totalRecords = await Task.countDocuments({created_by:req.user.id});
         const data = {
             totalRecords:totalRecords,
             total:response?.length,
