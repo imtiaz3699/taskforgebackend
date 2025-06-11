@@ -30,6 +30,57 @@ async function createTeam(req, res) {
     }
 }
 
+async function updateTeam(req, res) {
+    const { team_title, team_members, created_by, manager, team_lead } = req.body;
+    const { teamId } = req.params;
+
+    if (!teamId) {
+        return res.status(400).json({
+            message: "Team ID is required"
+        });
+    }
+
+    if (!team_title) {
+        return res.status(400).json({
+            message: "Team title is required"
+        });
+    }
+
+    if (!team_members?.length) {
+        return res.status(400).json({
+            message: "Team members are required"
+        });
+    }
+
+    try {
+        const updatedTeam = await Team.findByIdAndUpdate(
+            teamId,
+            {
+                team_title,
+                team_members,
+                created_by,
+                manager,
+                team_lead
+            },
+            { new: true }
+        );
+
+        if (!updatedTeam) {
+            return res.status(404).json({
+                message: "Team not found"
+            });
+        }
+
+        return res.status(200).json(updatedTeam);
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({
+            message: "Internal server error"
+        });
+    }
+}
+
+
 
 async function getTeams(req, res) {
     try {
@@ -56,6 +107,16 @@ async function getTeams(req, res) {
         return res.status(500).json({
             message: "Internal server error"
         })
+    }
+}
+
+async function getSingleTeam(req,res) {
+    try {
+        const teams = await Team.findById(req.params.id)
+        return res.status(200).json({message:"Teams fetched successfully.",data:teams})
+    }catch (e) {
+        console.log(e);
+        return res.status(500).json({message:e.message})
     }
 }
 async function deleteTeams(req,res) {
@@ -86,5 +147,7 @@ module.exports = {
     createTeam,
     getTeams,
     deleteTeams,
-    getUsersTeams
+    getUsersTeams,
+    updateTeam,
+    getSingleTeam
 }

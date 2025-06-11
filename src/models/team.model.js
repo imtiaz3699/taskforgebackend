@@ -21,7 +21,11 @@ const teamsSchema = new mongoose.Schema({
     team_lead: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-    }
+    },
+    assigned_task:[{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Task"
+    }]
 })
 const Team = mongoose.model("Team", teamsSchema);
 module.exports = Team

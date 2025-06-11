@@ -4,7 +4,7 @@ const authMiddleware = require("../middleware/authmiddleware")
 const checkUser = require("../middleware/checkuser")
 const {register,login, getUsers, getSingleUser, updateUser, deleteUser}  = require("../controller/user.controller")
 const {createTask, getTask,getSingleTask, updateTask, deleteTask} = require("../controller/task.controller")
-const {createTeam, getTeams, deleteTeams,getUsersTeams} = require("../controller/team.controller")
+const {createTeam, getTeams, deleteTeams,getUsersTeams, updateTeam, getSingleTeam} = require("../controller/team.controller")
 
 // auth
 router.post("/auth/register",register)
@@ -25,6 +25,8 @@ router.delete("/task/delete-task/:id",authMiddleware,deleteTask);
 
 // teams
 router.post("/teams/create-teams",authMiddleware,checkUser,createTeam);
+router.post("/teams/update-teams/:teamId",authMiddleware,checkUser,updateTeam);
+router.get("/teams/get-single-teams/:id",authMiddleware,checkUser,getSingleTeam);
 router.delete("/teams/delete-teams/:id",authMiddleware,checkUser,deleteTeams);
 router.get("/teams/get-teams",authMiddleware,getTeams);
 router.get("/teams/get-users/:id",authMiddleware,getUsersTeams);

@@ -69,6 +69,8 @@ async function updateTask(req, res) {
 
 async function getTask(req, res) {
     const { page = 1, limit = 20 } = req.query;
+    let filters = {};
+    
     console.log(req.user.id)
     try {
         const response = await Task.find({created_by:req.user.id}).populate("created_by").populate("assigned_to").skip((page - 1) * limit).limit(limit);
