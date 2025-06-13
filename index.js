@@ -44,7 +44,7 @@ const app = express();
 
 // Allow CORS
 app.use(cors({
-    origin: 'http://localhost:3000', // replace with your frontend origin
+    origin: 'https://task-forge-front-end.onrender.com/', // replace with your frontend origin
     credentials: true
 }));
 
