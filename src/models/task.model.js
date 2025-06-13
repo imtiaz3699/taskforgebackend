@@ -30,6 +30,10 @@ const taskSchema = new mongoose.Schema({
         due_date:{
             type:Date,
         },
+        team_id:{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"Team"
+        }
         // comments:[{
         //     type:mongoose.Schema.Types.ObjectId,
         //     ref:"Comment"

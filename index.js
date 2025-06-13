@@ -44,10 +44,10 @@ const app = express();
 
 // Allow CORS
 app.use(cors({
-    origin: 'https://task-forge-front-end.onrender.com', // replace with your frontend origin
+    // origin: 'https://task-forge-front-end.onrender.com', // replace with your frontend origin
+    origin: 'http://localhost:5173', // replace with your frontend origin
     credentials: true
 }));
-console.log('wow')
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
