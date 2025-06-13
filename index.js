@@ -12,7 +12,10 @@ dotenv.config();
 app.use(cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+app.use(cors({
+    origin: 'https://task-forge-front-end.vercel.app/', // or your frontend domain
+    credentials: true // if you're sending cookies or authorization headers
+}));
 app.use('/', routes);
 
 (async ()=> {
