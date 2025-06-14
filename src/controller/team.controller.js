@@ -232,7 +232,7 @@ async function updateTaskForTeam(req, res) {
   }
 }
 
-async function deleteTask() {
+async function deleteTask(req,res) {
   const { id } = req.params;
   if (!id) {
     return res.status(400).json({ message: "Please select a task." });
@@ -248,7 +248,7 @@ async function deleteTask() {
   }
 }
 
-async function getTaskForTeams() {
+async function getTaskForTeams(req,res) {
   const { team_id } = req.params;
   try {
     const tasks = await Task.find({ team_id: team_id });
@@ -266,5 +266,6 @@ module.exports = {
   getSingleTeam,
   createTaskForTeam,
   updateTaskForTeam,
-  getTaskForTeams
+  getTaskForTeams,
+  deleteTask
 };
