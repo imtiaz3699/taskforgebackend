@@ -1,6 +1,7 @@
 const Team = require("../models/team.model");
 const Users = require("../models/user.model");
 const Task = require("../models/task.model");
+const { default: mongoose } = require("mongoose");
 
 async function createTeam(req, res) {
   const { team_title, team_members, created_by, manager, team_lead } = req.body;
@@ -110,11 +111,155 @@ async function getTeams(req, res) {
 }
 
 async function getSingleTeam(req, res) {
+  const { page = 1, limit = 10 } = req.query;
+  const skip = (parseInt(page) - 1) * parseInt(limit);
   try {
-    const teams = await Team.findById(req.params.id);
-    return res
-      .status(200)
-      .json({ message: "Teams fetched successfully.", data: teams });
+    const teamWithTask = await Team.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(req.params.id) },
+      },
+      {
+        $lookup: {
+          from: "tasks",
+          let: { team_id: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$team_id", "$$team_id"] } } },
+            { $sort: { createdAt: -1 } },
+            { $skip: parseInt(skip) },
+            { $limit: parseInt(limit) },
+            {
+              $lookup: {
+                from: "users",
+                localField: "created_by",
+                foreignField: "_id",
+                as: "created_by",
+              },
+            },
+            {
+              $unwind: {
+                path: "$created_by",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "assigned_to",
+                foreignField: "_id",
+                as: "assigned_to",
+              },
+            },
+            {
+              $unwind: {
+                path: "$assigned_to",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+          ],
+          as: "tasks",
+        },
+      },
+      {
+        $lookup: {
+          from: "tasks",
+          let: { team_id: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$team_id", "$$team_id"],
+                },
+              },
+            },
+            {
+              $count: "total",
+            },
+          ],
+          as: "taskCount",
+        },
+      },
+      {
+        $addFields: {
+          totalTasks: {
+            $ifNull: [{ $arrayElemAt: ["$taskCount.total", 0] }, 0],
+          },
+        },
+      },
+      {
+        $project: {
+          taskCount: 0,
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "manager",
+          foreignField: "_id",
+          as: "manager",
+        },
+      },
+      {
+        $unwind: { path: "$manager", preserveNullAndEmptyArrays: true },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "team_lead",
+          foreignField: "_id",
+          as: "team_lead",
+        },
+      },
+      {
+        $unwind: { path: "$team_lead", preserveNullAndEmptyArrays: true },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "created_by",
+          foreignField: "_id",
+          as: "created_by",
+        },
+      },
+      {
+        $unwind: { path: "$created_by", preserveNullAndEmptyArrays: true },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "team_members",
+          foreignField: "_id",
+          as: "team_members",
+        },
+      },
+    ]);
+    const data = {
+      tasks: teamWithTask[0]?.tasks,
+      totalRecord: teamWithTask[0]?.totalTasks,
+      team_title: teamWithTask[0]?.team_title,
+      team_members: teamWithTask[0]?.team_members,
+      team_lead: teamWithTask[0]?.team_lead,
+      manager: teamWithTask[0]?.manager,
+      created_by: teamWithTask[0]?.created_by,
+      limit: limit,
+      page: page,
+      totalPages: Math.ceil(teamWithTask[0]?.totalTasks / limit),
+      _id: teamWithTask[0]?._id,
+    };
+    return res.status(200).json(data);
+  } catch (e) {
+    console.log(e);
+    return res.status(500).json({ message: e.message });
+  }
+}
+
+async function deleteTask(req, res) {
+  const { id } = req.params;
+  try {
+    const deleteTasks = await Task.findByIdAndDelete(id);
+    if (!deleteTask) {
+      return res.status(400).json({ messge: "Task not found." });
+    }
+    return res.status(200).json({ message: "Task Deleted successfully." });
   } catch (e) {
     console.log(e);
     return res.status(500).json({ message: e.message });
@@ -182,6 +327,7 @@ async function createTaskForTeam(req, res) {
     });
     return res.status(201).json(task);
   } catch (e) {
+    console.log(e);
     return res.status(500).json({
       message: "Internal server error",
     });
@@ -232,7 +378,7 @@ async function updateTaskForTeam(req, res) {
   }
 }
 
-async function deleteTask(req,res) {
+async function deleteTask(req, res) {
   const { id } = req.params;
   if (!id) {
     return res.status(400).json({ message: "Please select a task." });
@@ -248,7 +394,7 @@ async function deleteTask(req,res) {
   }
 }
 
-async function getTaskForTeams(req,res) {
+async function getTaskForTeams(req, res) {
   const { team_id } = req.params;
   try {
     const tasks = await Task.find({ team_id: team_id });
@@ -267,5 +413,5 @@ module.exports = {
   createTaskForTeam,
   updateTaskForTeam,
   getTaskForTeams,
-  deleteTask
+  deleteTask,
 };

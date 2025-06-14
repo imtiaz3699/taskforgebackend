@@ -9,7 +9,7 @@ const {createTeam, getTeams, deleteTeams,getUsersTeams, updateTeam, getSingleTea
 
 router.post("/teams/create-teams",authMiddleware,checkUser,createTeam);
 router.post("/teams/update-teams/:teamId",authMiddleware,checkUser,updateTeam);
-router.get("/teams/get-single-teams/:id",authMiddleware,checkUser,getSingleTeam);
+router.get("/teams/get-single-teams/:id",authMiddleware,getSingleTeam);
 router.delete("/teams/delete-teams/:id",authMiddleware,checkUser,deleteTeams);
 router.get("/teams/get-teams",authMiddleware,getTeams);
 router.get("/teams/get-users/:id",authMiddleware,getUsersTeams);
