@@ -111,7 +111,14 @@ async function getTeams(req, res) {
 }
 
 async function getSingleTeam(req, res) {
-  const { page = 1, limit = 10, title, assigned_to,status } = req.query;
+  const {
+    page = 1,
+    limit = 10,
+    title,
+    assigned_to,
+    status,
+    priority,
+  } = req.query;
   const skip = (parseInt(page) - 1) * parseInt(limit);
   try {
     const teamWithTask = await Team.aggregate([
@@ -143,6 +150,12 @@ async function getSingleTeam(req, res) {
                 ...(status && {
                   status: {
                     $regex: status?.trim(),
+                    $options: "i",
+                  },
+                }),
+                ...(priority && {
+                  priority: {
+                    $regex: priority?.trim(),
                     $options: "i",
                   },
                 }),
