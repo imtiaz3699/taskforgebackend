@@ -23,7 +23,15 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ["admin", "member",'team_lead','manager'],
         default: "member"
-    }
+    },
+    assigned_task:[{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Task"
+    }],
+    assigned_teams:[{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Team"
+    }]
 })
 
 userSchema.pre("save", async function (next) {

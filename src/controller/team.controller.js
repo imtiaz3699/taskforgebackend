@@ -111,19 +111,46 @@ async function getTeams(req, res) {
 }
 
 async function getSingleTeam(req, res) {
-  const { page = 1, limit = 10 } = req.query;
+  const { page = 1, limit = 10, title, assigned_to,status } = req.query;
   const skip = (parseInt(page) - 1) * parseInt(limit);
   try {
     const teamWithTask = await Team.aggregate([
       {
-        $match: { _id: new mongoose.Types.ObjectId(req.params.id) },
+        $match: {
+          _id: new mongoose.Types.ObjectId(req.params.id),
+          // ...(title && {
+          //   team_title: {
+          //     $regex: title ?? "",
+          //     $options: "i",
+          //   },
+          // }),
+        },
       },
       {
         $lookup: {
           from: "tasks",
           let: { team_id: "$_id" },
           pipeline: [
-            { $match: { $expr: { $eq: ["$team_id", "$$team_id"] } } },
+            {
+              $match: {
+                $expr: { $eq: ["$team_id", "$$team_id"] },
+                ...(title && {
+                  title: {
+                    $regex: req?.query?.title?.trim(),
+                    $options: "i",
+                  },
+                }),
+                ...(status && {
+                  status: {
+                    $regex: status?.trim(),
+                    $options: "i",
+                  },
+                }),
+                ...(assigned_to && {
+                  assigned_to: new mongoose.Types.ObjectId(assigned_to),
+                }),
+              },
+            },
             { $sort: { createdAt: -1 } },
             { $skip: parseInt(skip) },
             { $limit: parseInt(limit) },
@@ -152,6 +179,20 @@ async function getSingleTeam(req, res) {
             {
               $unwind: {
                 path: "$assigned_to",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "assigned_by",
+                foreignField: "_id",
+                as: "assigned_by",
+              },
+            },
+            {
+              $unwind: {
+                path: "$assigned_by",
                 preserveNullAndEmptyArrays: true,
               },
             },
@@ -315,8 +356,12 @@ async function createTaskForTeam(req, res) {
       message: "Please select a team!",
     });
   }
+
   try {
-    const task = await Task.create({
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    const task = new Task({
       title,
       description,
       created_by,
@@ -324,8 +369,25 @@ async function createTaskForTeam(req, res) {
       team_id,
       status,
       priority,
+      assigned_by: created_by,
     });
-    return res.status(201).json(task);
+    await task.save({ session });
+    if (!task) {
+      return res.status(400).json({ message: "Some thing went wrong! " });
+    }
+    const updatedUser = await Users.findByIdAndUpdate(
+      created_by,
+      {
+        $addToSet: {
+          assigned_task: task?._id,
+        },
+      },
+      { new: true, session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+    return res.status(201).json({ task, updatedUser });
   } catch (e) {
     console.log(e);
     return res.status(500).json({
@@ -403,6 +465,54 @@ async function getTaskForTeams(req, res) {
     return res.status(200).json({ message: e.message });
   }
 }
+
+async function assignTask(req, res) {
+  try {
+    const { taskId, userId, assignedById } = req.body;
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    const updateTask = await Task.findByIdAndUpdate(
+      taskId,
+      {
+        assigned_to: userId,
+        assigned_by: assignedById,
+      },
+      {
+        new: true,
+        session,
+      }
+    );
+
+    if (!updateTask) {
+      return res.status(400).json({ message: "Task not found." });
+    }
+
+    const updatedUser = await Users.findByIdAndUpdate(
+      userId,
+      {
+        $addToSet: {
+          assigned_task: {
+            task: taskId,
+            assigned_at: new Date(),
+          },
+        },
+      },
+      { new: true, session }
+    );
+
+    if (!updatedUser) {
+      return res.status(400).json({ message: "User not found!" });
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(200).json({ message: "Task assigned successfully." });
+  } catch (e) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
 module.exports = {
   createTeam,
   getTeams,
@@ -414,4 +524,5 @@ module.exports = {
   updateTaskForTeam,
   getTaskForTeams,
   deleteTask,
+  assignTask,
 };
