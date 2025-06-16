@@ -44,7 +44,7 @@ const app = express();
 
 // Allow CORS
 app.use(cors({
-    origin: process.env.DEV === "dev" ?'http://localhost:5173' : 'https://task-forge-front-end.onrender.com', 
+    origin: process.env.DEV === "dev" ? 'http://localhost:5173' : 'https://task-forge-front-end.onrender.com', 
     credentials: true
 }));
 app.use(express.json());
