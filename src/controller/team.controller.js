@@ -83,16 +83,33 @@ async function updateTeam(req, res) {
 }
 
 async function getTeams(req, res) {
+  const { page = 1, limit = 10, title } = req.query;
+  const userId = new mongoose.Types.ObjectId(req.user.id);
+  const filters = {
+    // team_members:userId,
+    ...(title && {
+      teams_title: title,
+    }),
+  };
+  if (req.user.role === "admin") {
+    filters.created_by = userId;
+  }
+  if (
+    req.user.role === "member" ||
+    req.user.role === "team_lead" ||
+    req.user.role === "manager"
+  ) {
+    filters.team_members = userId;
+  }
   try {
-    const { page, limit } = req.query;
-    const teams = await Team.find({ created_by: req.user.id })
+    const teams = await Team.find(filters)
       .populate("team_members")
       .populate("created_by")
       .populate("manager")
       .populate("team_lead")
       .skip((page - 1) * limit)
       .limit(limit);
-    const totalRecords = await Team.countDocuments();
+    const totalRecords = await Team.countDocuments(filters);
     const data = {
       data: teams,
       totalRecords: Number(totalRecords),
@@ -125,12 +142,6 @@ async function getSingleTeam(req, res) {
       {
         $match: {
           _id: new mongoose.Types.ObjectId(req.params.id),
-          // ...(title && {
-          //   team_title: {
-          //     $regex: title ?? "",
-          //     $options: "i",
-          //   },
-          // }),
         },
       },
       {
